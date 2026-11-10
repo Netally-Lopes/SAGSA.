@@ -1,8 +1,7 @@
 package tarefas02.api.security;
 
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Collections;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,24 +9,42 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import tarefas02.api.models.enums.ProfileEnums;
+import tarefas02.api.models.Perfil;
 
 @NoArgsConstructor
 @Getter
 public class UserSpringSecurity implements UserDetails {
 
     private Long id;
-    private String username;
+    private String email;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserSpringSecurity(Long id, String username, String password, Set<ProfileEnums> profiles) {
+    public UserSpringSecurity(Long id, String email, String password, Perfil perfil) {
         this.id = id;
-        this.username = username;
+        this.email = email;
         this.password = password;
-        this.authorities = profiles.stream()
-                .map(x -> new SimpleGrantedAuthority(x.getDescription()))
-                .collect(Collectors.toSet());
+        if (perfil != null && perfil.getNome() != null) {
+            // Define a permissão do Spring Security baseada no nome do perfil (ex: ROLE_ADMINISTRADOR)
+            this.authorities = Collections.singletonList(
+                new SimpleGrantedAuthority("ROLE_" + perfil.getNome().toUpperCase())
+            );
+        }
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
     }
 
     @Override
@@ -50,7 +67,10 @@ public class UserSpringSecurity implements UserDetails {
         return true;
     }
 
-    public boolean hasRole(ProfileEnums profile) {
-        return getAuthorities().contains(new SimpleGrantedAuthority(profile.getDescription()));
+    public boolean hasRole(String roleName) {
+        if (getAuthorities() == null) {
+            return false;
+        }
+        return getAuthorities().contains(new SimpleGrantedAuthority("ROLE_" + roleName.toUpperCase()));
     }
 }

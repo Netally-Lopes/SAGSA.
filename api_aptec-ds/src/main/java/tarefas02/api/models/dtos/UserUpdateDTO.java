@@ -6,15 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@AllArgsConstructor 
-@NoArgsConstructor 
-@Data 
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class UserUpdateDTO {
 
-    private  Long id;
+    private Long id;
 
-    @NotBlank 
-    @Size(min = 8, max = 60)
-    private String password;
-    
+    @NotBlank(message = "A senha é obrigatória")
+    @Size(min = 8, max = 255, message = "A senha deve ter no mínimo 8 caracteres")
+    private String senhaHash;
 }

@@ -2,6 +2,7 @@ package tarefas02.api.security;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,47 +17,40 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import tarefas02.api.models.User;
-
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private final AuthenticationManager authenticationManager;
-    private final JWTUtil jwtUtil;
+    private AuthenticationManager authenticationManager;
+    private JWTUtil jwtUtil;
 
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
-        setFilterProcessesUrl("/login");
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
         try {
-            User user = new ObjectMapper().readValue(request.getInputStream(), User.class);
+            // Converte o JSON da requisição de login para um DTO de Credenciais (email e senha)
+            UserSpringSecurity creds = new ObjectMapper().readValue(request.getInputStream(), UserSpringSecurity.class);
 
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    user.getUsername(),
-                    user.getPassword(),
-                    new ArrayList<>()
-            );
-            return this.authenticationManager.authenticate(authToken);
+                    creds.getEmail(), creds.getPassword(), new ArrayList<>());
+
+            return authenticationManager.authenticate(authToken);
         } catch (IOException e) {
-            throw new RuntimeException("Erro ao processar as credenciais de autenticação", e);
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-            FilterChain filterChain, Authentication authResult) throws IOException, ServletException {
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
+            Authentication authResult) throws IOException, ServletException {
 
-        UserSpringSecurity userSS = (UserSpringSecurity) authResult.getPrincipal();
-        String token = this.jwtUtil.generateToken(userSS.getUsername());
+        String username = ((UserSpringSecurity) authResult.getPrincipal()).getUsername(); // Retorna o email
+        String token = jwtUtil.generateToken(username);
 
-        // Corrigido "Authorization" (com 'h') e adicionado o espaço em "Bearer "
         response.addHeader("Authorization", "Bearer " + token);
-
-        // Corrigido "Access-Control-Expose-Headers" (com 'e' em Expose)
-        response.addHeader("Access-Control-Expose-Headers", "Authorization");
+        response.addHeader("access-control-expose-headers", "Authorization");
     }
 }
