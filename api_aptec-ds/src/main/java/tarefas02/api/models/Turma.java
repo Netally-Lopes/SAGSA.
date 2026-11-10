@@ -32,7 +32,8 @@ public class Turma {
 
     @ManyToOne
     @JoinColumn(name = "plano_curso_id", nullable = false)
-    @NotNull(message = "O plano de curso é obrigatório") PlanoCurso planoCurso;
+    @NotNull(message = "O plano de curso é obrigatório")
+    private PlanoCurso planoCurso;
 
     @Column(name = "codigo", nullable = false, length = 50)
     @NotBlank(message = "O código da turma é obrigatório")
