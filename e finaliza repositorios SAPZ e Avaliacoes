@@ -1,0 +1,11 @@
+[33m0b81e92[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m feat: adiciona repositorios Turma, Aluno e Usuario
+[33ma02c33b[m feat: adiciona repositorios Modulo, UnidadeCurricular, Capacidade e Conhecimento
+[33mf78fe85[m feat: adiciona repositorios Area, Curso e PlanoCurso
+[33m0241d50[m refactor: substitui User/Task antigos pela entidade Usuario do schema sapz
+[33m9189156[m feat: adiciona entidades InstrumentoAvaliacao, CriterioAvaliacao e CriterioRubrica
+[33m0b6e933[m feat: adiciona entidades SituacaoAprendizagem, EstrategiaEnsino e RecursoAmbiente
+[33meb1aa76[m feat: adiciona entidades Conhecimento, Turma e Aluno
+[33m0fb30bd[m feat: adiciona entidades Subfuncao, PadraoDesempenho e Capacidade
+[33m3847ef5[m feat: adiciona entidades Modulo, UnidadeCurricular e Funcao
+[33m47a3222[m feat: adiciona modulo Escola e ajusta autenticacao JWT para email
+[33m82eef95[m chore: estrutura inicial do projeto SAGSA
