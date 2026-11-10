@@ -11,5 +11,5 @@ import tarefas02.api.models.Aluno;
 @Repository
 public interface AlunoRepository extends JpaRepository<Aluno, Long> {
     List<Aluno> findByTurmaId(Long turmaId);
-    Optional<Aluno> findByMatricula(String matricula);
+    Optional<Aluno> findByCpf(String cpf);
 }

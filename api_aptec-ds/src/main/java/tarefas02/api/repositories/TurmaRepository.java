@@ -9,7 +9,6 @@ import tarefas02.api.models.Turma;
 
 @Repository
 public interface TurmaRepository extends JpaRepository<Turma, Long> {
-    List<Turma> findByEscolaId(Long escolaId);
+    List<Turma> findByStatusTrue();
     List<Turma> findByPlanoCursoId(Long planoCursoId);
-    List<Turma> findByAtivoTrue();
-}                                       
+}
