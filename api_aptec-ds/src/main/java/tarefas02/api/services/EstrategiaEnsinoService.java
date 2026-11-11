@@ -1,44 +1,48 @@
 package tarefas02.api.services;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import tarefas02.api.models.EstrategiaEnsino;
 import tarefas02.api.repositories.EstrategiaEnsinoRepository;
+import tarefas02.api.services.exceptions.ObjectNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EstrategiaEnsinoService {
 
-    @Autowired
-    private EstrategiaEnsinoRepository estrategiaEnsinoRepository;
+    private final EstrategiaEnsinoRepository estrategiaEnsinoRepository;
 
-    @Transactional(readOnly = true)
-    public List<EstrategiaEnsino> listarTodas() {
-        return estrategiaEnsinoRepository.findAll();
+    public EstrategiaEnsinoService(EstrategiaEnsinoRepository estrategiaEnsinoRepository) {
+        this.estrategiaEnsinoRepository = estrategiaEnsinoRepository;
     }
 
-    @Transactional(readOnly = true)
-    public EstrategiaEnsino buscarPorId(Long id) {
-        return estrategiaEnsinoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Estratégia de Ensino não encontrada com ID: " + id));
+    public EstrategiaEnsino findById(Long id) {
+        Optional<EstrategiaEnsino> obj = this.estrategiaEnsinoRepository.findById(id);
+        return obj.orElseThrow(() -> new ObjectNotFoundException(
+                "Estratégia de Ensino não encontrada! Id: " + id + ", Tipo: " + EstrategiaEnsino.class.getName()));
     }
 
-    @Transactional(readOnly = true)
-    public List<EstrategiaEnsino> listarPorSituacaoAprendizagem(Long saId) {
-        return estrategiaEnsinoRepository.findBySituacaoAprendizagemId(saId);
+    public List<EstrategiaEnsino> findAll() {
+        return this.estrategiaEnsinoRepository.findAll();
     }
 
-    @Transactional
-    public EstrategiaEnsino salvar(EstrategiaEnsino estrategia) {
-        return estrategiaEnsinoRepository.save(estrategia);
+    public EstrategiaEnsino create(EstrategiaEnsino obj) {
+        obj.setId(null);
+        return this.estrategiaEnsinoRepository.save(obj);
     }
 
-    @Transactional
-    public void deletar(Long id) {
-        EstrategiaEnsino estrategia = buscarPorId(id);
-        estrategiaEnsinoRepository.delete(estrategia);
+    public EstrategiaEnsino update(EstrategiaEnsino obj) {
+        findById(obj.getId());
+        return this.estrategiaEnsinoRepository.save(obj);
+    }
+
+    public void delete(Long id) {
+        findById(id);
+        try {
+            this.estrategiaEnsinoRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Não é possível excluir esta estratégia de ensino pois há registros associados!");
+        }
     }
 }

@@ -1,44 +1,48 @@
 package tarefas02.api.services;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import tarefas02.api.models.Capacidade;
 import tarefas02.api.repositories.CapacidadeRepository;
+import tarefas02.api.services.exceptions.ObjectNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CapacidadeService {
 
-    @Autowired
-    private CapacidadeRepository capacidadeRepository;
+    private final CapacidadeRepository capacidadeRepository;
 
-    @Transactional(readOnly = true)
-    public List<Capacidade> listarTodas() {
-        return capacidadeRepository.findAll();
+    public CapacidadeService(CapacidadeRepository capacidadeRepository) {
+        this.capacidadeRepository = capacidadeRepository;
     }
 
-    @Transactional(readOnly = true)
-    public Capacidade buscarPorId(Long id) {
-        return capacidadeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Capacidade não encontrada com ID: " + id));
+    public Capacidade findById(Long id) {
+        Optional<Capacidade> obj = this.capacidadeRepository.findById(id);
+        return obj.orElseThrow(() -> new ObjectNotFoundException(
+                "Capacidade não encontrada! Id: " + id + ", Tipo: " + Capacidade.class.getName()));
     }
 
-    @Transactional(readOnly = true)
-    public List<Capacidade> listarPorUnidadeCurricular(Long ucId) {
-        return capacidadeRepository.findByUnidadeCurricularId(ucId);
+    public List<Capacidade> findAll() {
+        return this.capacidadeRepository.findAll();
     }
 
-    @Transactional
-    public Capacidade salvar(Capacidade capacidade) {
-        return capacidadeRepository.save(capacidade);
+    public Capacidade create(Capacidade obj) {
+        obj.setId(null);
+        return this.capacidadeRepository.save(obj);
     }
 
-    @Transactional
-    public void deletar(Long id) {
-        Capacidade capacidade = buscarPorId(id);
-        capacidadeRepository.delete(capacidade);
+    public Capacidade update(Capacidade obj) {
+        findById(obj.getId());
+        return this.capacidadeRepository.save(obj);
+    }
+
+    public void delete(Long id) {
+        findById(id);
+        try {
+            this.capacidadeRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Não é possível excluir esta capacidade pois há registros associados!");
+        }
     }
 }

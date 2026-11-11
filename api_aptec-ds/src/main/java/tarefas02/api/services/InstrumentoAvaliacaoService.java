@@ -1,44 +1,48 @@
 package tarefas02.api.services;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import tarefas02.api.models.InstrumentoAvaliacao;
 import tarefas02.api.repositories.InstrumentoAvaliacaoRepository;
+import tarefas02.api.services.exceptions.ObjectNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class InstrumentoAvaliacaoService {
 
-    @Autowired
-    private InstrumentoAvaliacaoRepository instrumentoAvaliacaoRepository;
+    private final InstrumentoAvaliacaoRepository instrumentoAvaliacaoRepository;
 
-    @Transactional(readOnly = true)
-    public List<InstrumentoAvaliacao> listarTodos() {
-        return instrumentoAvaliacaoRepository.findAll();
+    public InstrumentoAvaliacaoService(InstrumentoAvaliacaoRepository instrumentoAvaliacaoRepository) {
+        this.instrumentoAvaliacaoRepository = instrumentoAvaliacaoRepository;
     }
 
-    @Transactional(readOnly = true)
-    public InstrumentoAvaliacao buscarPorId(Long id) {
-        return instrumentoAvaliacaoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Instrumento de Avaliação não encontrado com ID: " + id));
+    public InstrumentoAvaliacao findById(Long id) {
+        Optional<InstrumentoAvaliacao> obj = this.instrumentoAvaliacaoRepository.findById(id);
+        return obj.orElseThrow(() -> new ObjectNotFoundException(
+                "Instrumento de Avaliação não encontrado! Id: " + id + ", Tipo: " + InstrumentoAvaliacao.class.getName()));
     }
 
-    @Transactional(readOnly = true)
-    public List<InstrumentoAvaliacao> listarPorSituacaoAprendizagem(Long saId) {
-        return instrumentoAvaliacaoRepository.findBySituacaoAprendizagemId(saId);
+    public List<InstrumentoAvaliacao> findAll() {
+        return this.instrumentoAvaliacaoRepository.findAll();
     }
 
-    @Transactional
-    public InstrumentoAvaliacao salvar(InstrumentoAvaliacao instrumento) {
-        return instrumentoAvaliacaoRepository.save(instrumento);
+    public InstrumentoAvaliacao create(InstrumentoAvaliacao obj) {
+        obj.setId(null);
+        return this.instrumentoAvaliacaoRepository.save(obj);
     }
 
-    @Transactional
-    public void deletar(Long id) {
-        InstrumentoAvaliacao instrumento = buscarPorId(id);
-        instrumentoAvaliacaoRepository.delete(instrumento);
+    public InstrumentoAvaliacao update(InstrumentoAvaliacao obj) {
+        findById(obj.getId());
+        return this.instrumentoAvaliacaoRepository.save(obj);
+    }
+
+    public void delete(Long id) {
+        findById(id);
+        try {
+            this.instrumentoAvaliacaoRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Não é possível excluir este instrumento de avaliação pois há registros associados!");
+        }
     }
 }

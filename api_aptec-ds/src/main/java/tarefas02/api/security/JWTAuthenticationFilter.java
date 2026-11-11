@@ -2,7 +2,6 @@ package tarefas02.api.security;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,8 +18,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private AuthenticationManager authenticationManager;
-    private JWTUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
+    private final JWTUtil jwtUtil;
 
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
@@ -31,11 +30,11 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
         try {
-            // Converte o JSON da requisição de login para um DTO de Credenciais (email e senha)
-            UserSpringSecurity creds = new ObjectMapper().readValue(request.getInputStream(), UserSpringSecurity.class);
+            // Desserializa o JSON de login {"email": "...", "senha": "..."}
+            CredentialsDTO creds = new ObjectMapper().readValue(request.getInputStream(), CredentialsDTO.class);
 
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    creds.getEmail(), creds.getPassword(), new ArrayList<>());
+                    creds.getEmail(), creds.getSenha(), new ArrayList<>());
 
             return authenticationManager.authenticate(authToken);
         } catch (IOException e) {
@@ -52,5 +51,27 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
         response.addHeader("Authorization", "Bearer " + token);
         response.addHeader("access-control-expose-headers", "Authorization");
+    }
+
+    // DTO auxiliar interno para receber os dados de autenticação
+    private static class CredentialsDTO {
+        private String email;
+        private String senha;
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getSenha() {
+            return senha;
+        }
+
+        public void setSenha(String senha) {
+            this.senha = senha;
+        }
     }
 }

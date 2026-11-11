@@ -1,49 +1,48 @@
 package tarefas02.api.services;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import tarefas02.api.models.SituacaoAprendizagem;
 import tarefas02.api.repositories.SituacaoAprendizagemRepository;
+import tarefas02.api.services.exceptions.ObjectNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SituacaoAprendizagemService {
 
-    @Autowired
-    private SituacaoAprendizagemRepository situacaoAprendizagemRepository;
+    private final SituacaoAprendizagemRepository situacaoAprendizagemRepository;
 
-    @Transactional(readOnly = true)
-    public List<SituacaoAprendizagem> listarTodas() {
-        return situacaoAprendizagemRepository.findAll();
+    public SituacaoAprendizagemService(SituacaoAprendizagemRepository situacaoAprendizagemRepository) {
+        this.situacaoAprendizagemRepository = situacaoAprendizagemRepository;
     }
 
-    @Transactional(readOnly = true)
-    public SituacaoAprendizagem buscarPorId(Long id) {
-        return situacaoAprendizagemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Situação de Aprendizagem não encontrada com ID: " + id));
+    public SituacaoAprendizagem findById(Long id) {
+        Optional<SituacaoAprendizagem> obj = this.situacaoAprendizagemRepository.findById(id);
+        return obj.orElseThrow(() -> new ObjectNotFoundException(
+                "Situação de Aprendizagem não encontrada! Id: " + id + ", Tipo: " + SituacaoAprendizagem.class.getName()));
     }
 
-    @Transactional(readOnly = true)
-    public List<SituacaoAprendizagem> listarPorUnidadeCurricular(Long ucId) {
-        return situacaoAprendizagemRepository.findByUnidadeCurricularId(ucId);
+    public List<SituacaoAprendizagem> findAll() {
+        return this.situacaoAprendizagemRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public List<SituacaoAprendizagem> listarPublicas() {
-        return situacaoAprendizagemRepository.findByPublicoTrue();
+    public SituacaoAprendizagem create(SituacaoAprendizagem obj) {
+        obj.setId(null);
+        return this.situacaoAprendizagemRepository.save(obj);
     }
 
-    @Transactional
-    public SituacaoAprendizagem salvar(SituacaoAprendizagem sa) {
-        return situacaoAprendizagemRepository.save(sa);
+    public SituacaoAprendizagem update(SituacaoAprendizagem obj) {
+        findById(obj.getId());
+        return this.situacaoAprendizagemRepository.save(obj);
     }
 
-    @Transactional
-    public void deletar(Long id) {
-        SituacaoAprendizagem sa = buscarPorId(id);
-        situacaoAprendizagemRepository.delete(sa);
+    public void delete(Long id) {
+        findById(id);
+        try {
+            this.situacaoAprendizagemRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Não é possível excluir esta situação de aprendizagem pois há registros associados!");
+        }
     }
 }

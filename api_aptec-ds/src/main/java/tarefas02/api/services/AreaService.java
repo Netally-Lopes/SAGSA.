@@ -1,47 +1,48 @@
 package tarefas02.api.services;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import tarefas02.api.models.AreaTecnologica;
 import tarefas02.api.repositories.AreaRepository;
+import tarefas02.api.services.exceptions.ObjectNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AreaService {
 
-    @Autowired
-    private AreaRepository areaRepository;
+    private final AreaRepository areaRepository;
 
-    @Transactional(readOnly = true)
-    public List<AreaTecnologica> listarTodas() {
-        return areaRepository.findAll();
+    public AreaService(AreaRepository areaRepository) {
+        this.areaRepository = areaRepository;
     }
 
-    @Transactional(readOnly = true)
-    public AreaTecnologica buscarPorId(Long id) {
-        return areaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Área Tecnológica não encontrada com ID: " + id));
+    public AreaTecnologica findById(Long id) {
+        Optional<AreaTecnologica> obj = this.areaRepository.findById(id);
+        return obj.orElseThrow(() -> new ObjectNotFoundException(
+                "Área Tecnológica não encontrada! Id: " + id + ", Tipo: " + AreaTecnologica.class.getName()));
     }
 
-    @Transactional(readOnly = true)
-    public List<AreaTecnologica> listarPorEixo(Long eixoId) {
-        return areaRepository.findByEixoTecnologicoId(eixoId);
+    public List<AreaTecnologica> findAll() {
+        return this.areaRepository.findAll();
     }
 
-    @Transactional
-    public AreaTecnologica salvar(AreaTecnologica area) {
-        if (area.getEixoTecnologico() != null && areaRepository.existsByNomeAndEixoTecnologicoId(area.getNome(), area.getEixoTecnologico().getId())) {
-            throw new RuntimeException("Já existe uma Área Tecnológica com este nome neste Eixo.");
+    public AreaTecnologica create(AreaTecnologica obj) {
+        obj.setId(null);
+        return this.areaRepository.save(obj);
+    }
+
+    public AreaTecnologica update(AreaTecnologica obj) {
+        findById(obj.getId());
+        return this.areaRepository.save(obj);
+    }
+
+    public void delete(Long id) {
+        findById(id);
+        try {
+            this.areaRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Não é possível excluir esta área tecnológica pois há registros associados!");
         }
-        return areaRepository.save(area);
-    }
-
-    @Transactional
-    public void deletar(Long id) {
-        AreaTecnologica area = buscarPorId(id);
-        areaRepository.delete(area);
     }
 }

@@ -1,44 +1,48 @@
 package tarefas02.api.services;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import tarefas02.api.models.UnidadeCurricular;
 import tarefas02.api.repositories.UnidadeCurricularRepository;
+import tarefas02.api.services.exceptions.ObjectNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UnidadeCurricularService {
 
-    @Autowired
-    private UnidadeCurricularRepository unidadeCurricularRepository;
+    private final UnidadeCurricularRepository unidadeCurricularRepository;
 
-    @Transactional(readOnly = true)
-    public List<UnidadeCurricular> listarTodas() {
-        return unidadeCurricularRepository.findAll();
+    public UnidadeCurricularService(UnidadeCurricularRepository unidadeCurricularRepository) {
+        this.unidadeCurricularRepository = unidadeCurricularRepository;
     }
 
-    @Transactional(readOnly = true)
-    public UnidadeCurricular buscarPorId(Long id) {
-        return unidadeCurricularRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Unidade Curricular não encontrada com ID: " + id));
+    public UnidadeCurricular findById(Long id) {
+        Optional<UnidadeCurricular> obj = this.unidadeCurricularRepository.findById(id);
+        return obj.orElseThrow(() -> new ObjectNotFoundException(
+                "Unidade Curricular não encontrada! Id: " + id + ", Tipo: " + UnidadeCurricular.class.getName()));
     }
 
-    @Transactional(readOnly = true)
-    public List<UnidadeCurricular> listarPorModulo(Long moduloId) {
-        return unidadeCurricularRepository.findByModuloId(moduloId);
+    public List<UnidadeCurricular> findAll() {
+        return this.unidadeCurricularRepository.findAll();
     }
 
-    @Transactional
-    public UnidadeCurricular salvar(UnidadeCurricular uc) {
-        return unidadeCurricularRepository.save(uc);
+    public UnidadeCurricular create(UnidadeCurricular obj) {
+        obj.setId(null);
+        return this.unidadeCurricularRepository.save(obj);
     }
 
-    @Transactional
-    public void deletar(Long id) {
-        UnidadeCurricular uc = buscarPorId(id);
-        unidadeCurricularRepository.delete(uc);
+    public UnidadeCurricular update(UnidadeCurricular obj) {
+        findById(obj.getId());
+        return this.unidadeCurricularRepository.save(obj);
+    }
+
+    public void delete(Long id) {
+        findById(id);
+        try {
+            this.unidadeCurricularRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Não é possível excluir esta unidade curricular pois há registros associados!");
+        }
     }
 }

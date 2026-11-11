@@ -1,49 +1,48 @@
 package tarefas02.api.services;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import tarefas02.api.models.Curso;
 import tarefas02.api.repositories.CursoRepository;
+import tarefas02.api.services.exceptions.ObjectNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CursoService {
 
-    @Autowired
-    private CursoRepository cursoRepository;
+    private final CursoRepository cursoRepository;
 
-    @Transactional(readOnly = true)
-    public List<Curso> listarTodos() {
-        return cursoRepository.findAll();
+    public CursoService(CursoRepository cursoRepository) {
+        this.cursoRepository = cursoRepository;
     }
 
-    @Transactional(readOnly = true)
-    public List<Curso> listarAtivos() {
-        return cursoRepository.findByAtivoTrue();
+    public Curso findById(Long id) {
+        Optional<Curso> obj = this.cursoRepository.findById(id);
+        return obj.orElseThrow(() -> new ObjectNotFoundException(
+                "Curso não encontrado! Id: " + id + ", Tipo: " + Curso.class.getName()));
     }
 
-    @Transactional(readOnly = true)
-    public Curso buscarPorId(Long id) {
-        return cursoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Curso não encontrado com ID: " + id));
+    public List<Curso> findAll() {
+        return this.cursoRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public List<Curso> listarPorArea(Long areaId) {
-        return cursoRepository.findByAreaTecnologicaId(areaId);
+    public Curso create(Curso obj) {
+        obj.setId(null);
+        return this.cursoRepository.save(obj);
     }
 
-    @Transactional
-    public Curso salvar(Curso curso) {
-        return cursoRepository.save(curso);
+    public Curso update(Curso obj) {
+        findById(obj.getId());
+        return this.cursoRepository.save(obj);
     }
 
-    @Transactional
-    public void deletar(Long id) {
-        Curso curso = buscarPorId(id);
-        cursoRepository.delete(curso);
+    public void delete(Long id) {
+        findById(id);
+        try {
+            this.cursoRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Não é possível excluir este curso pois há registros associados!");
+        }
     }
 }

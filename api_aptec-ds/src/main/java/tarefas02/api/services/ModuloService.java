@@ -1,44 +1,48 @@
 package tarefas02.api.services;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import tarefas02.api.models.Modulo;
 import tarefas02.api.repositories.ModuloRepository;
+import tarefas02.api.services.exceptions.ObjectNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ModuloService {
 
-    @Autowired
-    private ModuloRepository moduloRepository;
+    private final ModuloRepository moduloRepository;
 
-    @Transactional(readOnly = true)
-    public List<Modulo> listarTodos() {
-        return moduloRepository.findAll();
+    public ModuloService(ModuloRepository moduloRepository) {
+        this.moduloRepository = moduloRepository;
     }
 
-    @Transactional(readOnly = true)
-    public Modulo buscarPorId(Long id) {
-        return moduloRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Módulo não encontrado com ID: " + id));
+    public Modulo findById(Long id) {
+        Optional<Modulo> obj = this.moduloRepository.findById(id);
+        return obj.orElseThrow(() -> new ObjectNotFoundException(
+                "Módulo não encontrado! Id: " + id + ", Tipo: " + Modulo.class.getName()));
     }
 
-    @Transactional(readOnly = true)
-    public List<Modulo> listarPorPlanoCurso(Long planoCursoId) {
-        return moduloRepository.findByPlanoCursoId(planoCursoId);
+    public List<Modulo> findAll() {
+        return this.moduloRepository.findAll();
     }
 
-    @Transactional
-    public Modulo salvar(Modulo modulo) {
-        return moduloRepository.save(modulo);
+    public Modulo create(Modulo obj) {
+        obj.setId(null);
+        return this.moduloRepository.save(obj);
     }
 
-    @Transactional
-    public void deletar(Long id) {
-        Modulo modulo = buscarPorId(id);
-        moduloRepository.delete(modulo);
+    public Modulo update(Modulo obj) {
+        findById(obj.getId());
+        return this.moduloRepository.save(obj);
+    }
+
+    public void delete(Long id) {
+        findById(id);
+        try {
+            this.moduloRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Não é possível excluir este módulo pois há registros associados!");
+        }
     }
 }
