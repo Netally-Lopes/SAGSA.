@@ -28,7 +28,10 @@ public class AlunoService {
 
     @Transactional(readOnly = true)
     public List<Aluno> listarPorTurma(Long turmaId) {
-        return alunoRepository.findByTurmaId(turmaId);
+        return alunoRepository.findAll().stream()
+                .filter(aluno -> aluno.getTurma() != null
+                        && turmaId.equals(aluno.getTurma().getId()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
